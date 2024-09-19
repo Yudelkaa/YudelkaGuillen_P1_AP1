@@ -4,9 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "Algos")
-data class AlgoEntity {
+data class AlgoEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null
-
-
-}
+    )
