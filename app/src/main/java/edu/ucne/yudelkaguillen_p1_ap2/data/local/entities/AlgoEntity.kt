@@ -1,4 +1,4 @@
-package edu.ucne.yudelkaguillen_p1_ap2.data.local.entity
+package edu.ucne.yudelkaguillen_p1_ap2.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

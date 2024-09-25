@@ -4,7 +4,9 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    alias(libs.plugins.kotlin.serialization)
+    //alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.kotlinx.serialization)
+
 }
 
 android {
@@ -78,7 +80,7 @@ dependencies {
     implementation(libs.androidx.core.i18n)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
-    //  optional - Kotlin Extensions and Coroutines support for Room
+
     implementation("androidx.room:room-ktx:2.6.1")
 
     //Hilt

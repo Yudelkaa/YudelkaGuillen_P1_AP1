@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import edu.ucne.yudelkaguillen_p1_ap2.ui.theme.YudelkaGuillen_P1_AP2Theme
 
 @Composable
-fun NavHost(
+fun NavHostExamen(
     navHost: NavHostController
 ) {
    NavHost(
@@ -35,6 +35,6 @@ fun NavHost(
 @Composable
 fun GreetingPreview() {
     YudelkaGuillen_P1_AP2Theme {
-        NavHost(rememberNavController())
+        NavHostExamen(rememberNavController())
     }
 }

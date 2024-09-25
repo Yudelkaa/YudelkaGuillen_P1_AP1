@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import edu.ucne.yudelkaguillen_p1_ap2.navigation.NavHost
+import edu.ucne.yudelkaguillen_p1_ap2.navigation.NavHostExamen
 import edu.ucne.yudelkaguillen_p1_ap2.ui.theme.YudelkaGuillen_P1_AP2Theme
 
 @AndroidEntryPoint
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
-                    NavHost(navHost)
+                    NavHostExamen(navHost)
                 }
             }
         }
