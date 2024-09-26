@@ -2,17 +2,16 @@ package edu.ucne.yudelkaguillen_p1_ap2.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import edu.ucne.yudelkaguillen_p1_ap2.data.local.dao.AlgoDao
+import androidx.room.TypeConverters
+import edu.ucne.yudelkaguillen_p1_ap2.data.local.dao.VentaDao
+import edu.ucne.yudelkaguillen_p1_ap2.data.local.entities.VentaEntity
 
 @Database(
-    entities = [
-    ],
-
-
+    entities = [VentaEntity::class],
     version = 1,
     exportSchema = false
 )
 abstract class ParcialDatabase : RoomDatabase() {
-    abstract fun algoDao(): AlgoDao
+    abstract fun ventaDao(): VentaDao
 
 }

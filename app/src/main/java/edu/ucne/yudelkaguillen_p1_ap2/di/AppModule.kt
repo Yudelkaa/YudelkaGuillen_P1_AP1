@@ -22,7 +22,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAlgoDao(parcialDatabase: ParcialDatabase) =
-        parcialDatabase.algoDao()
+    fun provideVentaDao(parcialDatabase: ParcialDatabase) =
+        parcialDatabase.ventaDao()
 
 }
