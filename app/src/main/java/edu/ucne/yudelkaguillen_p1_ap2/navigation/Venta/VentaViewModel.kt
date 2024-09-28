@@ -30,79 +30,41 @@ class VentaViewModel @Inject constructor(
         }
     }
 
+    fun onEvent(event: VentaUiEvent) {
+        when (event) {
+            is VentaUiEvent.ClienteChanged -> VentaUiEvent.ClienteChanged(event.cliente)
+            is VentaUiEvent.GalonesChanged -> VentaUiEvent.GalonesChanged(event.galones)
+            is VentaUiEvent.PrecioChanged -> VentaUiEvent.PrecioChanged(event.precio)
+            is VentaUiEvent.DescuentoChanged -> VentaUiEvent.DescuentoChanged(event.descuento)
+            is VentaUiEvent.TotalChanged -> VentaUiEvent.TotalChanged(event.total)
+            is VentaUiEvent.Validate -> validateInput()
+            is VentaUiEvent.VentaSelected -> editarVenta(event.id)
+
+            VentaUiEvent.CalcularDescuento -> calcularDescuento()
+            VentaUiEvent.CalcularTotal -> calcularTotal()
+            VentaUiEvent.Save -> saveVenta()
+            VentaUiEvent.Nuevo -> Nuevo()
+            VentaUiEvent.Delete -> delete()
+
+        }
+    }
+
+    private fun saveVenta() {
+        viewModelScope.launch {
+            ventaRepository.save(_uiState.value.toEntity())
+            _uiState.update {
+                it.copy(
+                    isSuccess = true,
+                    errorMessage = null
+                )
+            }
+            getAllVentas()
+        }
+    }
+
     private fun delete() {
         viewModelScope.launch {
             ventaRepository.delete(_uiState.value.toEntity())
-        }
-    }
-
-    private fun editarVenta(id: Int) {
-        viewModelScope.launch {
-            val venta = ventaRepository.find(id)
-            if (id > 0) {
-                _uiState.update {
-                    it.copy(
-                        cliente = venta?.cliente ?: "",
-                        galones = venta?.galones ,
-                        precio = venta?.precio ?: 0.0,
-                        descuento = venta?.descuento ?: 0.0,
-                        total = venta?.total ?: 0.0
-                    )
-                }
-            }
-        }
-    }
-
-    fun onEvent(event: VentaUiEvent) {
-        when (event) {
-            is VentaUiEvent.ClienteChanged -> {
-                _uiState.update { it.copy(cliente = event.cliente) }
-            }
-            is VentaUiEvent.GalonesChanged -> {
-                _uiState.update { it.copy(galones = event.galones.toDouble()) }
-            }
-            is VentaUiEvent.PrecioChanged -> {
-                _uiState.update { it.copy(precio = event.precio.toDouble()) }
-            }
-            is VentaUiEvent.DescuentoChanged -> {
-                _uiState.update { it.copy(descuento = event.descuento) }
-            }
-            is VentaUiEvent.TotalChanged -> {
-                _uiState.update { it.copy(total = event.total.toDouble()) }
-            }
-            VentaUiEvent.Nuevo -> {
-                _uiState.update {
-                    it.copy(
-                        cliente = "",
-                        galones = 0.0,
-                        precio = 0.0,
-                        descuento = 0.0,
-                        total = 0.0,
-                        errorMessage = null,
-                        isSuccess = false
-                    )
-                }
-            }
-            VentaUiEvent.Delete -> delete()
-            is VentaUiEvent.VentaSelected -> editarVenta(event.id)
-            VentaUiEvent.Save -> saveVenta()
-            VentaUiEvent.CalcularDescuento -> calcularDescuento()
-            VentaUiEvent.CalcularTotal -> calcularTotal()
-        }
-    }
-
-
-    private fun saveVenta() {
-        if (validateInput()) {
-            viewModelScope.launch {
-                ventaRepository.save(_uiState.value.toEntity())
-                _uiState.update {
-                    it.copy(
-                        isSuccess = true,
-                        errorMessage = null
-                    )
-                }
-            }
         }
     }
 
@@ -121,26 +83,58 @@ class VentaViewModel @Inject constructor(
         _uiState.update { it.copy(total = total) }
     }
 
+    private fun Nuevo() {
+        _uiState.update {
+            it.copy(
+                cliente = "",
+                galones = 0.0,
+                precio = 0.0,
+                descuento = 0.0,
+                errorMessage = "",
+                total = 0.0,
+
+                )
+        }
+    }
+
+    private fun editarVenta(id: Int) {
+        viewModelScope.launch {
+            val venta = ventaRepository.find(id)
+            if (id > 0) {
+                _uiState.update {
+                    it.copy(
+                        ventaId = venta?.id,
+                        cliente = venta?.cliente ?: "",
+                        galones = venta?.galones,
+                        precio = venta?.precio ?: 0.0,
+                        descuento = venta?.descuento ?: 0.0,
+                        total = venta?.total ?: 0.0
+                    )
+                }
+            }
+        }
+    }
+
+
     private fun validateInput(): Boolean {
         return when {
             _uiState.value.cliente.isNullOrBlank() -> {
                 _uiState.update { it.copy(errorMessage = "El campo cliente no puede ir vacío") }
                 false
             }
-            _uiState.value.galones == null -> {
-                _uiState.update { it.copy(errorMessage = "El campo galones no puede ir vacío") }
+
+            _uiState.value.galones!! <= 0.0 || _uiState.value.galones == null  -> {
+                _uiState.update { it.copy(errorMessage = "El campo galones no puede ir vacío y debe ser mayor a 0.0") }
                 false
             }
-            _uiState.value.precio == null -> {
+
+            _uiState.value.precio!! <= 0.0 || _uiState.value.precio == null -> {
                 _uiState.update { it.copy(errorMessage = "El campo precio no puede ir vacío") }
                 false
             }
-            _uiState.value.descuento == null -> {
-                _uiState.update { it.copy(errorMessage = "El campo descuento no puede ir vacío") }
-                false
-            }
-            _uiState.value.total == null -> {
-                _uiState.update { it.copy(errorMessage = "El campo total no puede ir vacío") }
+
+            _uiState.value.descuento!! > uiState.value.precio!! -> {
+                _uiState.update { it.copy(errorMessage = "El descuento debe ser menor que el precio") }
                 false
             }
             else -> true
@@ -153,7 +147,8 @@ fun VentaUiState.toEntity() = VentaEntity(
     galones = galones ?: 0.0,
     precio = precio ?: 0.0,
     descuento = descuento ?: 0.0,
-    total = total ?: 0.0
+    total = total ?: 0.0,
+    id = ventaId
 )
 
 

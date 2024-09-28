@@ -10,7 +10,9 @@ sealed interface VentaUiEvent {
     data class VentaSelected(val id: Int) : VentaUiEvent
     data object Save: VentaUiEvent
     data object Delete: VentaUiEvent
+    data object Validate: VentaUiEvent
     data object Nuevo: VentaUiEvent
+
 
     data object CalcularDescuento : VentaUiEvent
     data object CalcularTotal : VentaUiEvent
