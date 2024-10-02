@@ -11,6 +11,7 @@ data class VentaEntity(
     val galones: Double? = null,
     val precio: Double? = null,
     val descuento: Double? = null,
-    val total: Double? = null
+    val total: Double? = null,
+    val totalDescuento: Double? = null
 
     )

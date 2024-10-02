@@ -8,7 +8,7 @@ import edu.ucne.yudelkaguillen_p1_ap2.data.local.entities.VentaEntity
 
 @Database(
     entities = [VentaEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class ParcialDatabase : RoomDatabase() {
