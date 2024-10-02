@@ -1,4 +1,4 @@
-package edu.ucne.yudelkaguillen_p1_ap2.navigation
+package edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,8 +10,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.yudelkaguillen_p1_ap2.ui.theme.YudelkaGuillen_P1_AP2Theme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -24,9 +26,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta.VentaUiEvent
-import edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta.VentaUiState
-import edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta.VentaViewModel
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun VentaScreen(
@@ -36,16 +39,16 @@ fun VentaScreen(
     goBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    LaunchedEffect(key1 = true) {
+        if (ventaId > 0) {
+            viewModel.onEvent(VentaUiEvent.VentaSelected(ventaId))
+        }
+    }
     VentaBodyScreen(
         uiState = uiState,
         goVentaList = goVentaList,
-        ventaId = ventaId,
         goBack = goBack,
-        saveVenta = { viewModel.onEvent(VentaUiEvent.Save) },
-        deleteVenta = { viewModel.onEvent(VentaUiEvent.Delete) },
-        nuevoVenta = { viewModel.onEvent(VentaUiEvent.Nuevo) },
-        onEvent = { event -> viewModel.onEvent(event) }
+        onEvent = viewModel::onEvent
     )
 }
 
@@ -54,19 +57,9 @@ fun VentaScreen(
 fun VentaBodyScreen(
     uiState: VentaUiState,
     goVentaList: () -> Unit,
-    ventaId: Int,
     goBack: () -> Unit,
-    saveVenta: () -> Unit,
-    deleteVenta: () -> Unit,
-    nuevoVenta: () -> Unit,
     onEvent: (VentaUiEvent) -> Unit
 ) {
-    LaunchedEffect(key1 = ventaId) {
-        if (ventaId > 0) {
-            onEvent(VentaUiEvent.VentaSelected(ventaId))
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,65 +87,133 @@ fun VentaBodyScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
+                        .padding(4.dp)
                 ) {
                     OutlinedTextField(
                         label = { Text(text = "Cliente") },
-                        value = uiState.cliente ?: "",
-                        onValueChange = { onEvent(VentaUiEvent.ClienteChanged(it)) }
-
+                        value = uiState.cliente,
+                        onValueChange = { onEvent(VentaUiEvent.ClienteChanged(it)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.AccountBox,
+                                contentDescription = "Campo Cliente"
+                            )
+                        }
                     )
+
+                    if (uiState.messageCliente != " ") {
+                        uiState.messageCliente?.let {
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+
+
                     OutlinedTextField(
                         label = { Text(text = "Galones") },
-                        value = uiState.galones?.toString() ?: "",
+                        value = uiState.galones.toString().replace("null", "0.0"),
                         onValueChange = {
                             onEvent(
                                 VentaUiEvent.GalonesChanged(
-                                    it.toFloatOrNull() ?: 0f
+                                    it.toDoubleOrNull() ?: 0.0
                                 )
                             )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
 
-                        }
                     )
+
+                    if (uiState.messageGalones != "") {
+                        uiState.messageGalones?.let {
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+
                     OutlinedTextField(
                         label = { Text(text = "Precio") },
-                        value = uiState.precio?.toString() ?: "",
+                        value = uiState.precio.toString().replace("null", "0.0"),
                         onValueChange = {
                             onEvent(
                                 VentaUiEvent.PrecioChanged(
-                                    it.toFloatOrNull() ?: 0f
+                                    it.toDoubleOrNull() ?: 0.0
                                 )
                             )
+                        },
+                        placeholder = { Text(text = "0.0") },
+                        prefix = { Text(text = "$") },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        )
+
+                    if (uiState.messagePrecio != "") {
+                        uiState.messagePrecio?.let {
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp
+                            )
                         }
-                    )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         label = { Text(text = "Descuento") },
-                        value = uiState.descuento?.toString() ?: "",
-                        onValueChange = {},
-
-                        )
+                        value = uiState.descuento.toString().replace("null", "0.0"),
+                        onValueChange = {
+                            onEvent(
+                                VentaUiEvent.DescuentoChanged(
+                                    it.toDoubleOrNull() ?: 0.0
+                                )
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                    )
+                    if (uiState.messageDescuento != "") {
+                        uiState.messageDescuento?.let {
+                            Text(
+                                text = it,
+                                color = Color.Red,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
 
                     OutlinedTextField(
                         label = { Text(text = "Total") },
-                        value = uiState.total?.toString() ?: "",
+                        value = uiState.total.toString().replace("null", "0.0"),
                         onValueChange = {
-                            onEvent(VentaUiEvent.TotalChanged(it.toFloatOrNull() ?: 0f))
-                        }
+                            onEvent(
+                                VentaUiEvent.TotalChanged(
+                                    it.toDoubleOrNull() ?: 0.0
+                                )
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     )
-                    Spacer(modifier = Modifier.padding(8.dp))
-                    OutlinedButton(onClick = { onEvent(VentaUiEvent.CalcularDescuento) }) {
-                        Text(text = "Calcular Descuento")
-                    }
 
-                    OutlinedButton(onClick = { onEvent(VentaUiEvent.CalcularTotal) }) {
-                        Text(text = "Calcular Total")
-                    }
+                    Spacer(modifier = Modifier.padding(8.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        OutlinedButton(onClick = nuevoVenta) {
+                        OutlinedButton(
+                            onClick = {
+                                onEvent(VentaUiEvent.Nuevo)
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Nuevo"
@@ -162,8 +223,11 @@ fun VentaBodyScreen(
                         }
 
                         OutlinedButton(onClick = {
-                            saveVenta()
-                            goBack()
+                            onEvent(VentaUiEvent.Save)
+                            if(uiState.isSuccess){
+                                goBack()
+                            }
+
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
@@ -171,15 +235,7 @@ fun VentaBodyScreen(
                             )
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text(text = "Guardar")
-                        }
 
-                        OutlinedButton(onClick = { onEvent(VentaUiEvent.Delete) }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Eliminar"
-                            )
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            Text(text = "Eliminar")
                         }
                     }
                 }
@@ -195,11 +251,7 @@ fun ScreenPreview() {
         VentaBodyScreen(
             uiState = VentaUiState(),
             goVentaList = {},
-            ventaId = 0,
             goBack = {},
-            saveVenta = {},
-            deleteVenta = {},
-            nuevoVenta = {},
             onEvent = {}
         )
     }
