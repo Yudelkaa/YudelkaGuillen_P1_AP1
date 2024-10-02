@@ -1,14 +1,16 @@
 package edu.ucne.yudelkaguillen_p1_ap2.navigation
 
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta.VentaListScreen
+import androidx.navigation.toRoute
+import edu.ucne.yudelkaguillen_p1_ap2.navigation.Screen.ListScreen
+import edu.ucne.yudelkaguillen_p1_ap2.navigation.Screen.RegistroScreen
+import edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta.VentaScreen
+import edu.ucne.yudelkaguillen_p1_ap2.presentation.venta.VentaListScreen
 import edu.ucne.yudelkaguillen_p1_ap2.ui.theme.YudelkaGuillen_P1_AP2Theme
 
 @Composable
@@ -20,21 +22,14 @@ fun NavHostExamen(
         startDestination = Screen.ListScreen
     ) {
       composable<Screen.ListScreen>{
-          Button(onClick = { navHost.navigate(Screen.RegistroScreen(0)) }) {
-              Text(text = "Registro")
-          }
           VentaListScreen(
-              createVenta = {
-                  navHost.navigate(Screen.RegistroScreen(0))
-              },
-              goToVenta = { navHost.navigate(Screen.RegistroScreen(0)) }
+              onEdit = {navHost.navigate(Screen.RegistroScreen(it))},
+              onAdd = {navHost.navigate(Screen.RegistroScreen(0))}
 
           )
       }
         composable<Screen.RegistroScreen>{
-            Button(onClick = { navHost.navigate(Screen.ListScreen) }) {
-                Text(text = ":D funciona")
-            }
+            val args = it.toRoute<Screen.RegistroScreen>()
             VentaScreen(
                 goVentaList = {
                     navHost.navigate(
@@ -43,7 +38,7 @@ fun NavHostExamen(
                 goBack = {
                     navHost.navigateUp()
                 },
-                ventaId = id
+                ventaId = args.id
             )
         }
     }
