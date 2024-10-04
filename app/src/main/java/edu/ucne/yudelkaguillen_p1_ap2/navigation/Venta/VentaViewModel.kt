@@ -188,11 +188,17 @@ class VentaViewModel @Inject constructor(
         }
     }
 
-
     private fun validateInput(): Boolean {
+        // Obtener todas las ventas
+        val ventas = _uiState.value.listaVenta
+
         return when {
             _uiState.value.cliente.isNullOrBlank() -> {
                 _uiState.update { it.copy(errorMessage = "El campo cliente no puede ir vacío") }
+                false
+            }
+            ventas.any { it.cliente == _uiState.value.cliente } -> {
+                _uiState.update { it.copy(errorMessage = "Ya existe un cliente con este nombre") }
                 false
             }
             (_uiState.value.galones ?: 0.0) <= 0.0 -> {
@@ -210,6 +216,7 @@ class VentaViewModel @Inject constructor(
             else -> true
         }
     }
+
 
     fun TotalChange() {
         val total = (uiState.value.galones ?: 0.0) * (uiState.value.precio ?: 0.0) - (uiState.value.descuento ?: 0.0)
@@ -233,13 +240,3 @@ class VentaViewModel @Inject constructor(
         id = ventaId,
     )
 }
-
-
-
-
-
-
-
-
-
-

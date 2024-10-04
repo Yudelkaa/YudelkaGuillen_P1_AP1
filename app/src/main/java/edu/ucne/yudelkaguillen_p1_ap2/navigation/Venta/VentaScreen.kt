@@ -224,9 +224,8 @@ fun VentaBodyScreen(
 
                         OutlinedButton(onClick = {
                             onEvent(VentaUiEvent.Save)
-                            if(uiState.isSuccess){
                                 goBack()
-                            }
+
 
                         }) {
                             Icon(
