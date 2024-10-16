@@ -133,9 +133,9 @@ fun VentaListBody(
                                 contentAlignment = Alignment.CenterEnd
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = Color.White
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = Color.White
                                 )
                             }
                         },
@@ -181,7 +181,7 @@ fun VentaListPreview() {
     )
 
     VentaListBody(
-        uiState = VentaUiState(listaVenta = list),
+        uiState = VentaUiState(),
         onEvent = {},
         onAdd = {},
         onEdit = {}
