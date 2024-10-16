@@ -1,6 +1,7 @@
 package edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta
 
 import edu.ucne.yudelkaguillen_p1_ap2.data.local.entities.VentaEntity
+import edu.ucne.yudelkaguillen_p1_ap2.data.remote.dto.VentaDto
 
 data class VentaUiState(
     val ventaId: Int? = null,
@@ -8,7 +9,7 @@ data class VentaUiState(
     val galones:Double? = 0.0,
     val precio: Double? = 0.0,
     val descuento: Double? = 0.0,
-    val totalDescuento : Double? = 0.0,
+    val totalDescuento: Double? = 0.0,
     val total: Double? = 0.0,
     val listaVenta: List<VentaEntity> = emptyList(),
 
@@ -20,7 +21,8 @@ data class VentaUiState(
     val messageDescuento: String? = "",
     val messageTotal: String? = "",
     val messageTotalDescuento: String? = "",
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val isLoading: Boolean = false
 )
 
 

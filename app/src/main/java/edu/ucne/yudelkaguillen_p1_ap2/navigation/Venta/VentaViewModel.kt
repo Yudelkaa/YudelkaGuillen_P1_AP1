@@ -3,13 +3,15 @@ package edu.ucne.yudelkaguillen_p1_ap2.navigation.Venta
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import edu.ucne.yudelkaguillen_p1_ap2.data.local.entities.VentaEntity
+import edu.ucne.yudelkaguillen_p1_ap2.data.remote.dto.VentaDto
+import edu.ucne.yudelkaguillen_p1_ap2.data.repository.Resource
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import edu.ucne.yudelkaguillen_p1_ap2.data.repository.VentaRepository
+import kotlinx.coroutines.flow.collectLatest
 import java.text.DecimalFormat
 
 @HiltViewModel
@@ -20,13 +22,37 @@ class VentaViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        getAllVentas()
+        viewModelScope.launch {
+            getAllVentas()
+        }
     }
 
-    private fun getAllVentas() {
-        viewModelScope.launch {
-            ventaRepository.getAll().collect { listaVenta ->
-                _uiState.update { it.copy(listaVenta = listaVenta) }
+    private suspend fun getAllVentas() {
+        ventaRepository.getVentas().collectLatest { result ->
+            when (result) {
+                is Resource.Loading -> {
+                    _uiState.update {
+                        it.copy(isLoading = true)
+                    }
+                }
+
+                is Resource.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            listaVenta = result.data ?: emptyList(),
+                            isLoading = false
+                        )
+                    }
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = result.message ?: "Error desconocido",
+                            isLoading = false
+                        )
+                    }
+                }
             }
         }
     }
@@ -42,6 +68,8 @@ class VentaViewModel @Inject constructor(
             is VentaUiEvent.DescuentoChanged -> DescuentoChanged(event.descuento)
             is VentaUiEvent.TotalChanged -> calcularTotal()
             is VentaUiEvent.Delete -> delete(event.id)
+            is VentaUiEvent.CalcularDescuento -> calcularDescuento()
+            is VentaUiEvent.CalcularTotal -> calcularTotal()
 
 
             VentaUiEvent.CalcularDescuento -> calcularDescuento()
@@ -54,23 +82,25 @@ class VentaViewModel @Inject constructor(
     private fun saveVenta() {
         if (validateInput()) {
             viewModelScope.launch {
-                ventaRepository.save(_uiState.value.toEntity())
-                _uiState.update {
-                    it.copy(
-                        isSuccess = true,
-                        errorMessage = null
-                    )
+                try {
+                    if (uiState.value.ventaId != null) {
+                        ventaRepository.updateVentas(uiState.value.toEntity())
+                    } else {
+                        ventaRepository.addVentas(uiState.value.toEntity())
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-                getAllVentas()
+
             }
         }
     }
 
     private fun delete(id: Int) {
         viewModelScope.launch {
-            val venta = ventaRepository.find(id)
+            val venta = ventaRepository.findVentas(id)
             if (venta != null) {
-                ventaRepository.delete(venta)
+                ventaRepository.deleteVentas(id)
                 _uiState.update {
                     it.copy(
                         listaVenta = it.listaVenta.filter { v -> v.id != id },
@@ -113,7 +143,7 @@ class VentaViewModel @Inject constructor(
 
     private fun EditarVenta(id: Int) {
         viewModelScope.launch {
-            val venta = ventaRepository.find(id)
+            val venta = ventaRepository.findVentas(id)
             if (id > 0) {
                 _uiState.update {
                     it.copy(
@@ -189,7 +219,6 @@ class VentaViewModel @Inject constructor(
     }
 
     private fun validateInput(): Boolean {
-        // Obtener todas las ventas
         val ventas = _uiState.value.listaVenta
 
         return when {
@@ -197,29 +226,35 @@ class VentaViewModel @Inject constructor(
                 _uiState.update { it.copy(errorMessage = "El campo cliente no puede ir vacío") }
                 false
             }
+
             ventas.any { it.cliente == _uiState.value.cliente } -> {
                 _uiState.update { it.copy(errorMessage = "Ya existe un cliente con este nombre") }
                 false
             }
+
             (_uiState.value.galones ?: 0.0) <= 0.0 -> {
                 _uiState.update { it.copy(errorMessage = "El campo galones debe ser mayor a 0.0") }
                 false
             }
+
             (_uiState.value.precio ?: 0.0) <= 0.0 -> {
                 _uiState.update { it.copy(errorMessage = "El campo precio debe ser mayor a 0.0") }
                 false
             }
+
             (_uiState.value.descuento ?: 0.0) > (_uiState.value.precio ?: 0.0) -> {
                 _uiState.update { it.copy(errorMessage = "El descuento debe ser menor que el precio") }
                 false
             }
+
             else -> true
         }
     }
 
 
     fun TotalChange() {
-        val total = (uiState.value.galones ?: 0.0) * (uiState.value.precio ?: 0.0) - (uiState.value.descuento ?: 0.0)
+        val total = (uiState.value.galones ?: 0.0) * (uiState.value.precio
+            ?: 0.0) - (uiState.value.descuento ?: 0.0)
         val df = DecimalFormat("#.00")
         val totalFormateado = df.format(total)
         _uiState.update {
@@ -231,12 +266,14 @@ class VentaViewModel @Inject constructor(
     }
 
 
-    fun VentaUiState.toEntity() = VentaEntity(
-        cliente = cliente,
-        galones = galones,
-        precio = precio,
-        descuento = descuento,
-        total = total,
-        id = ventaId,
+    fun VentaUiState.toEntity() = VentaDto(
+        cliente = cliente ?: "",
+        galones = galones ?: 0.0,
+        precio = precio ?: 0.0,
+        descuento = descuento ?: 0.0,
+        total = total ?: 0.0,
+        id = ventaId ?: 0,
+        totalDescuento = totalDescuento ?: 0.0,
+
     )
 }
